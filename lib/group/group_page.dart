@@ -1,6 +1,9 @@
+import 'dart:io';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class GroupPage extends StatefulWidget {
   final String name;
@@ -11,6 +14,27 @@ class GroupPage extends StatefulWidget {
 }
 
 class _GroupPageState extends State<GroupPage> {
+  IO.Socket? socket;
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    print("ok");
+  }
+
+  void connect() {
+    socket = IO.io("http//localhost:3000", <String, dynamic>{
+      "transports": ["websocket"],
+      "autoconnect": false,
+    });
+    socket!.connect();
+    print("we re here");
+    socket!.onConnect((_) {
+      print('connect');
+      socket!.emit('msg', 'test');
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
