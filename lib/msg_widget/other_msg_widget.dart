@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class OtherMsgWidget extends StatelessWidget {
   final String sender;
   final String msg;
-  const OtherMsgWidget({super.key,required this.sender , required this.msg});
+  const OtherMsgWidget({super.key, required this.sender, required this.msg});
 
   @override
   Widget build(BuildContext context) {
@@ -12,9 +12,7 @@ class OtherMsgWidget extends StatelessWidget {
       alignment: Alignment.bottomLeft,
       child: ConstrainedBox(
         constraints:
-            BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width - 60
-              ),
+            BoxConstraints(maxWidth: MediaQuery.of(context).size.width - 60),
         child: Card(
           color: const Color.fromARGB(255, 150, 40, 0),
           child: Card(
@@ -23,18 +21,18 @@ class OtherMsgWidget extends StatelessWidget {
               child: Column(
                 children: [
                   Text(
-                    "ihkk",
+                    sender,
                     style: TextStyle(
-                      // color: Colors.yellow,
-                    ),
-                    ),
-                    Text(
-                    "llkl",
+                        // color: Colors.yellow,
+                        ),
+                  ),
+                  Text(
+                    msg,
                     style: TextStyle(
-                      // color: Colors.yellow,
-                    ),
-                    )
-                  ],
+                        // color: Colors.yellow,
+                        ),
+                  )
+                ],
               ),
             ),
           ),

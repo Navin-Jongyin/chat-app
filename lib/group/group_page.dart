@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
@@ -10,8 +8,11 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class GroupPage extends StatefulWidget {
   final String name;
+
   final String userId;
-  const GroupPage({super.key, required this.name, required this.userId});
+
+  const GroupPage({Key? key, required this.name, required this.userId})
+      : super(key: key);
 
   @override
   State<GroupPage> createState() => _GroupPageState();
@@ -21,36 +22,51 @@ class _GroupPageState extends State<GroupPage> {
   IO.Socket? socket;
   List<MsgModel> listMsg = [];
   TextEditingController _msgController = TextEditingController();
+
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     connect();
   }
 
   void connect() {
-  socket = IO.io("http://localhost:3000", <String, dynamic>{
-    "transports": ["websocket"],
-    "autoConnect": false,
-  });
-  socket!.connect();
-  socket!.onConnect((_) {
-    print("frontend connected");
-    socket!.on("sendMsgServer", (msg) {
-      print(msg);
-      if (msg["userId"] != widget.userId) {
-        setState(() {
-          listMsg.add(MsgModel(
-            msg: msg["msg"], 
-            type: msg["type"], 
-            sender: msg["senderName"],
-          ));
-        });
-      }
+    socket = IO.io("http://localhost:3000", <String, dynamic>{
+      "transports": ["websocket"],
+      "autoConnect": false,
     });
-  });
-}
-
+    socket!.connect();
+    socket!.onConnect((_) {
+      print("frontend connected");
+      socket!.on("sendMsgServer", (msg) {
+        print("Received message: $msg");
+        try {
+          if (msg != null && msg is Map<String, dynamic>) {
+            final String? type = msg['type'];
+            final String? sender = msg['sender'];
+            final String? receivedMsg = msg['msg'];
+            if (type != null && sender != null && receivedMsg != null) {
+              setState(() {
+                listMsg.add(MsgModel(
+                  msg: receivedMsg,
+                  type: type,
+                  sender: sender,
+                ));
+              });
+            } else {
+              print(
+                  "One of the properties is null: type=$type, sender=$sender, receivedMsg=$receivedMsg");
+              print(msg['sender']);
+            }
+          } else {
+            print("Invalid message format: $msg");
+          }
+        } catch (e, stackTrace) {
+          print("Error processing message: $e");
+          print(stackTrace);
+        }
+      });
+    });
+  }
 
   void sendMsg(String msg, String senderName) {
     MsgModel ownMsg = MsgModel(msg: msg, type: "ownMsg", sender: senderName);
@@ -63,7 +79,7 @@ class _GroupPageState extends State<GroupPage> {
       "msg": msg,
       "sender": senderName,
       "userId": widget.userId,
-    }); //send message to backend
+    });
   }
 
   @override
@@ -76,28 +92,32 @@ class _GroupPageState extends State<GroupPage> {
       body: Column(
         children: [
           Expanded(
-              child: ListView.builder(
-                  itemCount: listMsg.length,
-                  itemBuilder: (context, index) {
-                    if (listMsg[index].type == "ownMsg") {
-                      return OwnMsgWidget(
-                          msg: listMsg[index].msg,
-                          sender: listMsg[index].sender);
-                    } else {
-                      return OtherMsgWidget(
-                          msg: listMsg[index].msg,
-                          sender: listMsg[index].sender);
-                    }
-                   
-                  })),
+            child: ListView.builder(
+              itemCount: listMsg.length,
+              itemBuilder: (context, index) {
+                if (listMsg[index].type == "ownMsg") {
+                  return OwnMsgWidget(
+                    msg: listMsg[index].msg,
+                    sender: listMsg[index].sender,
+                  );
+                } else {
+                  return OtherMsgWidget(
+                    msg: listMsg[index].msg,
+                    sender: listMsg[index].sender,
+                  );
+                }
+              },
+            ),
+          ),
           Padding(
             padding: const EdgeInsets.all(40.0),
             child: Row(
               children: [
                 Expanded(
-                    child: TextFormField(
-                  controller: _msgController,
-                )),
+                  child: TextFormField(
+                    controller: _msgController,
+                  ),
+                ),
                 IconButton(
                   onPressed: () {
                     String msg = _msgController.text;
@@ -116,5 +136,11 @@ class _GroupPageState extends State<GroupPage> {
         ],
       ),
     );
+  }
+
+  @override
+  void dispose() {
+    socket?.dispose();
+    super.dispose();
   }
 }

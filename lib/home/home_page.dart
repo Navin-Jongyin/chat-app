@@ -61,9 +61,9 @@ class _HomePageState extends State<HomePage> {
                                     pageBuilder: (context, animation,
                                             secondaryAnimation) =>
                                         GroupPage(
-                                          name: name,
-                                          userId: uuid.v1(),
-                                          ),
+                                      name: name,
+                                      userId: uuid.v1(),
+                                    ),
                                   ),
                                 );
                               }
