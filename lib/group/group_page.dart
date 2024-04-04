@@ -44,7 +44,7 @@ class _GroupPageState extends State<GroupPage> {
             final String? type = msg['type'];
             final String? sender = msg['sender'];
             final String? receivedMsg = msg['msg'];
-            if (type != null && sender != null && receivedMsg != null) {
+            if (type != null && sender != null && receivedMsg != null && msg["userId"] != widget.userId) {
               setState(() {
                 listMsg.add(MsgModel(
                   msg: receivedMsg,
@@ -55,7 +55,7 @@ class _GroupPageState extends State<GroupPage> {
             } else {
               print(
                   "One of the properties is null: type=$type, sender=$sender, receivedMsg=$receivedMsg");
-              print(msg['sender']);
+              
             }
           } else {
             print("Invalid message format: $msg");
