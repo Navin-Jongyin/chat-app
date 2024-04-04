@@ -3,11 +3,15 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
+import 'package:group_chat/group/msg_model.dart';
+import 'package:group_chat/msg_widget/other_msg_widget.dart';
+import 'package:group_chat/msg_widget/own_msg_widget.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class GroupPage extends StatefulWidget {
   final String name;
-  const GroupPage({super.key, required this.name});
+  final String userId;
+  const GroupPage({super.key, required this.name, required this.userId});
 
   @override
   State<GroupPage> createState() => _GroupPageState();
@@ -15,24 +19,51 @@ class GroupPage extends StatefulWidget {
 
 class _GroupPageState extends State<GroupPage> {
   IO.Socket? socket;
+  List<MsgModel> listMsg = [];
+  TextEditingController _msgController = TextEditingController();
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    print("ok");
+    connect();
   }
 
   void connect() {
-    socket = IO.io("http//localhost:3000", <String, dynamic>{
-      "transports": ["websocket"],
-      "autoconnect": false,
+  socket = IO.io("http://localhost:3000", <String, dynamic>{
+    "transports": ["websocket"],
+    "autoConnect": false,
+  });
+  socket!.connect();
+  socket!.onConnect((_) {
+    print("frontend connected");
+    socket!.on("sendMsgServer", (msg) {
+      print(msg);
+      if (msg["userId"] != widget.userId) {
+        setState(() {
+          listMsg.add(MsgModel(
+            msg: msg["msg"], 
+            type: msg["type"], 
+            sender: msg["senderName"],
+          ));
+        });
+      }
     });
-    socket!.connect();
-    print("we re here");
-    socket!.onConnect((_) {
-      print('connect');
-      socket!.emit('msg', 'test');
+  });
+}
+
+
+  void sendMsg(String msg, String senderName) {
+    MsgModel ownMsg = MsgModel(msg: msg, type: "ownMsg", sender: senderName);
+    listMsg.add(ownMsg);
+    setState(() {
+      listMsg;
     });
+    socket!.emit('sendMsg', {
+      "type": "ownMsg",
+      "msg": msg,
+      "sender": senderName,
+      "userId": widget.userId,
+    }); //send message to backend
   }
 
   @override
@@ -40,17 +71,41 @@ class _GroupPageState extends State<GroupPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text("Kuay Group"),
+        backgroundColor: Colors.red,
       ),
       body: Column(
         children: [
-          Expanded(child: Container()),
+          Expanded(
+              child: ListView.builder(
+                  itemCount: listMsg.length,
+                  itemBuilder: (context, index) {
+                    if (listMsg[index].type == "ownMsg") {
+                      return OwnMsgWidget(
+                          msg: listMsg[index].msg,
+                          sender: listMsg[index].sender);
+                    } else {
+                      return OtherMsgWidget(
+                          msg: listMsg[index].msg,
+                          sender: listMsg[index].sender);
+                    }
+                   
+                  })),
           Padding(
             padding: const EdgeInsets.all(40.0),
             child: Row(
               children: [
-                Expanded(child: TextFormField()),
+                Expanded(
+                    child: TextFormField(
+                  controller: _msgController,
+                )),
                 IconButton(
-                  onPressed: () {},
+                  onPressed: () {
+                    String msg = _msgController.text;
+                    if (msg.isNotEmpty) {
+                      sendMsg(_msgController.text, widget.name);
+                      _msgController.clear();
+                    }
+                  },
                   icon: Icon(
                     Icons.send,
                   ),

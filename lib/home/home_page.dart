@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:group_chat/group/group_page.dart';
+import 'package:uuid/uuid.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -11,6 +12,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   TextEditingController nameController = TextEditingController();
   final formKey = GlobalKey<FormState>();
+  var uuid = Uuid();
 
   @override
   Widget build(BuildContext context) {
@@ -58,7 +60,10 @@ class _HomePageState extends State<HomePage> {
                                   PageRouteBuilder(
                                     pageBuilder: (context, animation,
                                             secondaryAnimation) =>
-                                        GroupPage(name: name),
+                                        GroupPage(
+                                          name: name,
+                                          userId: uuid.v1(),
+                                          ),
                                   ),
                                 );
                               }
