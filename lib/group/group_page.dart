@@ -44,7 +44,10 @@ class _GroupPageState extends State<GroupPage> {
             final String? type = msg['type'];
             final String? sender = msg['sender'];
             final String? receivedMsg = msg['msg'];
-            if (type != null && sender != null && receivedMsg != null && msg["userId"] != widget.userId) {
+            if (type != null &&
+                sender != null &&
+                receivedMsg != null &&
+                msg["userId"] != widget.userId) {
               setState(() {
                 listMsg.add(MsgModel(
                   msg: receivedMsg,
@@ -55,7 +58,6 @@ class _GroupPageState extends State<GroupPage> {
             } else {
               print(
                   "One of the properties is null: type=$type, sender=$sender, receivedMsg=$receivedMsg");
-              
             }
           } else {
             print("Invalid message format: $msg");
@@ -89,51 +91,57 @@ class _GroupPageState extends State<GroupPage> {
         title: const Text("Kuay Group"),
         backgroundColor: Colors.red,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView.builder(
-              itemCount: listMsg.length,
-              itemBuilder: (context, index) {
-                if (listMsg[index].type == "ownMsg") {
-                  return OwnMsgWidget(
-                    msg: listMsg[index].msg,
-                    sender: listMsg[index].sender,
-                  );
-                } else {
-                  return OtherMsgWidget(
-                    msg: listMsg[index].msg,
-                    sender: listMsg[index].sender,
-                  );
-                }
-              },
+      body: SafeArea(
+        child: Column(
+          children: [
+            Expanded(
+              child: ListView.builder(
+                reverse: true, // Reverse the order of children
+                itemCount: listMsg.length > 4
+                    ? 4
+                    : listMsg.length, // Show maximum 4 messages
+                itemBuilder: (context, index) {
+                  final int reversedIndex = listMsg.length - 1 - index;
+                  if (listMsg[reversedIndex].type == "ownMsg") {
+                    return OwnMsgWidget(
+                      msg: listMsg[reversedIndex].msg,
+                      sender: listMsg[reversedIndex].sender,
+                    );
+                  } else {
+                    return OtherMsgWidget(
+                      msg: listMsg[reversedIndex].msg,
+                      sender: listMsg[reversedIndex].sender,
+                    );
+                  }
+                },
+              ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(40.0),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextFormField(
-                    controller: _msgController,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 25),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _msgController,
+                    ),
                   ),
-                ),
-                IconButton(
-                  onPressed: () {
-                    String msg = _msgController.text;
-                    if (msg.isNotEmpty) {
-                      sendMsg(_msgController.text, widget.name);
-                      _msgController.clear();
-                    }
-                  },
-                  icon: Icon(
-                    Icons.send,
+                  IconButton(
+                    onPressed: () {
+                      String msg = _msgController.text;
+                      if (msg.isNotEmpty) {
+                        sendMsg(_msgController.text, widget.name);
+                        _msgController.clear();
+                      }
+                    },
+                    icon: Icon(
+                      Icons.send,
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
