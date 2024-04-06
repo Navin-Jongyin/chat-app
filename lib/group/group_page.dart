@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:group_chat/group/msg_model.dart';
-import 'package:group_chat/msg_widget/other_msg_widget.dart';
 import 'package:group_chat/msg_widget/own_msg_widget.dart';
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 
@@ -41,23 +40,20 @@ class _GroupPageState extends State<GroupPage> {
         print("Received message: $msg");
         try {
           if (msg != null && msg is Map<String, dynamic>) {
-            final String? type = msg['type'];
             final String? sender = msg['sender'];
             final String? receivedMsg = msg['msg'];
-            if (type != null &&
-                sender != null &&
+            if (sender != null &&
                 receivedMsg != null &&
                 msg["userId"] != widget.userId) {
               setState(() {
                 listMsg.add(MsgModel(
                   msg: receivedMsg,
-                  type: type,
                   sender: sender,
                 ));
               });
             } else {
               print(
-                  "One of the properties is null: type=$type, sender=$sender, receivedMsg=$receivedMsg");
+                  "One of the properties is null: , sender=$sender, receivedMsg=$receivedMsg");
             }
           } else {
             print("Invalid message format: $msg");
@@ -71,13 +67,12 @@ class _GroupPageState extends State<GroupPage> {
   }
 
   void sendMsg(String msg, String senderName) {
-    MsgModel ownMsg = MsgModel(msg: msg, type: "ownMsg", sender: senderName);
+    MsgModel ownMsg = MsgModel(msg: msg, sender: senderName);
     listMsg.add(ownMsg);
     setState(() {
       listMsg;
     });
     socket!.emit('sendMsg', {
-      "type": "ownMsg",
       "msg": msg,
       "sender": senderName,
       "userId": widget.userId,
@@ -102,17 +97,10 @@ class _GroupPageState extends State<GroupPage> {
                     : listMsg.length, // Show maximum 4 messages
                 itemBuilder: (context, index) {
                   final int reversedIndex = listMsg.length - 1 - index;
-                  if (listMsg[reversedIndex].type == "ownMsg") {
-                    return OwnMsgWidget(
-                      msg: listMsg[reversedIndex].msg,
-                      sender: listMsg[reversedIndex].sender,
-                    );
-                  } else {
-                    return OtherMsgWidget(
-                      msg: listMsg[reversedIndex].msg,
-                      sender: listMsg[reversedIndex].sender,
-                    );
-                  }
+                  return OwnMsgWidget(
+                    msg: listMsg[reversedIndex].msg,
+                    sender: listMsg[reversedIndex].sender,
+                  );
                 },
               ),
             ),
