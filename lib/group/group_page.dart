@@ -82,11 +82,9 @@ class _GroupPageState extends State<GroupPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text("Kuay Group"),
-        backgroundColor: Colors.red,
-      ),
-      body: SafeArea(
+      body: Container(
+        color: Colors.red,
+        height: 300,
         child: Column(
           children: [
             Expanded(
