@@ -7,10 +7,16 @@ import 'package:socket_io_client/socket_io_client.dart' as IO;
 
 class GroupPage extends StatefulWidget {
   final String name;
-
   final String userId;
+  final String groupName;
+  final String groupId;
 
-  const GroupPage({Key? key, required this.name, required this.userId})
+  const GroupPage(
+      {Key? key,
+      required this.name,
+      required this.userId,
+      required this.groupName,
+      required this.groupId})
       : super(key: key);
 
   @override
@@ -40,13 +46,16 @@ class _GroupPageState extends State<GroupPage> {
         print("Received message: $msg");
         try {
           if (msg != null && msg is Map<String, dynamic>) {
+            final String groupId = msg['groupId'];
             final String? sender = msg['sender'];
             final String? receivedMsg = msg['msg'];
             if (sender != null &&
                 receivedMsg != null &&
-                msg["userId"] != widget.userId) {
+                msg["userId"] != widget.userId &&
+                msg["groupId"] == widget.groupId) {
               setState(() {
                 listMsg.add(MsgModel(
+                  groupId: groupId,
                   msg: receivedMsg,
                   sender: sender,
                 ));
@@ -66,26 +75,36 @@ class _GroupPageState extends State<GroupPage> {
     });
   }
 
-  void sendMsg(String msg, String senderName) {
-    MsgModel ownMsg = MsgModel(msg: msg, sender: senderName);
+  void sendMsg(String groupId,String msg, String senderName) {
+    MsgModel ownMsg = MsgModel(groupId: groupId,msg: msg, sender: senderName);
     listMsg.add(ownMsg);
     setState(() {
       listMsg;
     });
     socket!.emit('sendMsg', {
+      "groupId": groupId,
       "msg": msg,
       "sender": senderName,
       "userId": widget.userId,
     });
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
+
+
+@override
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      backgroundColor: Colors.red,
+      title: Text(widget.groupName), // Display group name on the app bar
+    ),
+    body: Align(
+      alignment: Alignment.bottomLeft,
+      child: Container(
         color: Colors.red,
-        height: 300,
+        height: 400,
         child: Column(
+          mainAxisSize: MainAxisSize.min, // Minimize the height of the column
           children: [
             Expanded(
               child: ListView.builder(
@@ -103,7 +122,7 @@ class _GroupPageState extends State<GroupPage> {
               ),
             ),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 25),
+              padding: const EdgeInsets.all(20),
               child: Row(
                 children: [
                   Expanded(
@@ -115,7 +134,7 @@ class _GroupPageState extends State<GroupPage> {
                     onPressed: () {
                       String msg = _msgController.text;
                       if (msg.isNotEmpty) {
-                        sendMsg(_msgController.text, widget.name);
+                        sendMsg(widget.groupId,_msgController.text, widget.name);
                         _msgController.clear();
                       }
                     },
@@ -129,12 +148,7 @@ class _GroupPageState extends State<GroupPage> {
           ],
         ),
       ),
-    );
-  }
-
-  @override
-  void dispose() {
-    socket?.dispose();
-    super.dispose();
-  }
+    ),
+  );
+}
 }

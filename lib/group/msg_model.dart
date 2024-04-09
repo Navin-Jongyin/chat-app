@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
 class MsgModel {
-  // String type;
+  String groupId;
   String msg;
   String sender;
   MsgModel(
-      {required this.msg,
-      // required this.type,
-      required this.sender});
+      { required this.groupId,
+        required this.msg,
+        required this.sender});
 }
